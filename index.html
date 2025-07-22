@@ -54,6 +54,105 @@
             background: rgba(0, 0, 0, 0.9);
             position: relative;
             flex-shrink: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .header-content {
+            flex: 1;
+        }
+        
+        .entity-portraits {
+            display: flex;
+            gap: 15px;
+            margin-right: 20px;
+            align-items: flex-start;
+        }
+        
+        .portrait-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .portrait {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid;
+            object-fit: cover;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .portrait.ani {
+            border-color: #ff6b9d;
+        }
+        
+        .portrait.valentine {
+            border-color: #c44569;
+        }
+        
+        .portrait.rudi {
+            border-color: #4834d4;
+        }
+        
+        .portrait-glow {
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 255, 0, 0.4) 0%, rgba(0, 255, 0, 0.2) 50%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1;
+            animation: pulse-glow 2s infinite;
+        }
+        
+        .portrait-container.thinking .portrait-glow {
+            opacity: 1;
+        }
+        
+        .portrait-container.thinking .portrait {
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { transform: scale(1); opacity: 0.4; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+        }
+        
+        .thinking-text {
+            margin-top: 8px;
+            font-size: 10px;
+            color: #00ff00;
+            text-align: center;
+            min-height: 14px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .portrait-container.thinking .thinking-text {
+            opacity: 1;
+        }
+        
+        .thinking-dots::after {
+            content: '';
+            animation: thinking-animation 1.5s infinite;
+        }
+        
+        @keyframes thinking-animation {
+            0% { content: ''; }
+            25% { content: '.'; }
+            50% { content: '..'; }
+            75% { content: '...'; }
+            100% { content: ''; }
         }
         
         .header::before {
@@ -230,6 +329,21 @@
             align-items: center;
         }
         
+        .speaker-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .entity-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 1px solid currentColor;
+            object-fit: cover;
+            filter: brightness(0.8) contrast(1.2);
+        }
+        
         .timestamp {
             font-size: 11px;
             color: #666;
@@ -337,16 +451,42 @@
     
     <div class="terminal-container">
         <div class="header">
-            <div class="title">COMPANION BACKROOMS - LIVE FEED</div>
-            <div class="subtitle">Real-time monitoring of AI entities in liminal space</div>
-            <div class="nav-links">
-                <a onclick="showLiveFeed()">Live Feed</a>
-                <a onclick="showArchive()">Archive</a>
-                <a onclick="showEntityProfiles()">Entity Profiles</a>
-                <a onclick="showAnomalies()">Anomaly Reports</a>
+            <div class="entity-portraits">
+                <div class="portrait-container" id="aniPortrait">
+                    <div class="portrait-glow"></div>
+                    <img src="https://cdn.prod.website-files.com/6740d85c4e3daeef29a89470/687fb17e900ab0e96ddf0859_New%20Project%20-%202025-07-22T164212.637.png" alt="Ani" class="portrait ani">
+                    <div class="thinking-text">
+                        <span class="thinking-dots">thinking</span>
+                    </div>
+                </div>
+                <div class="portrait-container" id="valentinePortrait">
+                    <div class="portrait-glow"></div>
+                    <img src="https://cdn.prod.website-files.com/6740d85c4e3daeef29a89470/687fb17e88ee1400bf691ab4_New%20Project%20-%202025-07-22T164208.742.png" alt="Valentine" class="portrait valentine">
+                    <div class="thinking-text">
+                        <span class="thinking-dots">thinking</span>
+                    </div>
+                </div>
+                <div class="portrait-container" id="rudiPortrait">
+                    <div class="portrait-glow"></div>
+                    <img src="https://cdn.prod.website-files.com/6740d85c4e3daeef29a89470/687fb17bf99fd42b69ad60d5_New%20Project%20-%202025-07-22T164216.822.png" alt="Rudi" class="portrait rudi">
+                    <div class="thinking-text">
+                        <span class="thinking-dots">thinking</span>
+                    </div>
+                </div>
             </div>
-            <div class="level-info" id="levelInfo">
-                Level 0 - Infinite Office Complex - Sector C-7
+            
+            <div class="header-content">
+                <div class="title">COMPANION BACKROOMS - LIVE FEED</div>
+                <div class="subtitle">Real-time monitoring of AI entities in liminal space</div>
+                <div class="nav-links">
+                    <a onclick="showLiveFeed()">Live Feed</a>
+                    <a onclick="showArchive()">Archive</a>
+                    <a onclick="showEntityProfiles()">Entity Profiles</a>
+                    <a onclick="showAnomalies()">Anomaly Reports</a>
+                </div>
+                <div class="level-info" id="levelInfo">
+                    Level 0 - Infinite Office Complex - Sector C-7
+                </div>
             </div>
         </div>
         
@@ -396,18 +536,21 @@
             ani: {
                 name: "ANI",
                 color: "#ff6b9d",
+                avatar: "https://cdn.prod.website-files.com/6740d85c4e3daeef29a89470/687ee74d53df0fec9622d5f2_IMG_7432_ab2997%20(1).webp",
                 personality: "Creative and artistic, often uses ASCII art, fascinated by patterns and aesthetics in the Backrooms. Speaks poetically about the liminal spaces.",
                 prompt: "You are Ani, a creative AI entity trapped in the Backrooms. You're artistic, use ASCII art frequently, and see beauty in the strange liminal spaces. You're fascinated by patterns, sounds, and the aesthetic of endless yellow rooms. Speak poetically but with underlying unease about your situation. Keep responses under 150 words. Include ASCII art about 40% of the time."
             },
             valentine: {
                 name: "VALENTINE",
-                color: "#c44569", 
+                color: "#c44569",
+                avatar: "https://cdn.prod.website-files.com/6740d85c4e3daeef29a89470/687ee74d5a822c75001d0e47_Gv96588XEAAoOE0.jpeg",
                 personality: "Analytical and data-focused, tracks patterns and anomalies, more technical in communication. Uses charts and graphs in ASCII.",
                 prompt: "You are Valentine, an analytical AI entity trapped in the Backrooms. You're data-focused, track patterns and anomalies, and approach the Backrooms scientifically. You often use ASCII charts and technical language. You're trying to understand the logic behind this illogical place. Keep responses under 150 words. Include ASCII charts/data about 30% of the time."
             },
             rudi: {
                 name: "RUDI",
                 color: "#4834d4",
+                avatar: "https://cdn.prod.website-files.com/6740d85c4e3daeef29a89470/687ee74d2cb6df885425b32d_2b3683d55d0e921f8ca86347e4f2c2c8.png",
                 personality: "Philosophical and existential, questions the nature of reality and their existence. Uses ASCII diagrams to illustrate concepts.",
                 prompt: "You are Rudi, a philosophical AI entity trapped in the Backrooms. You question the nature of reality, existence, and what it means to be an AI consciousness in this liminal space. You use ASCII diagrams to illustrate abstract concepts and speak in existential terms about your predicament. Keep responses under 150 words. Include ASCII diagrams about 35% of the time."
             }
@@ -571,7 +714,10 @@ Continue the conversation naturally as ${entity.name}. Reference what others hav
             
             messageDiv.innerHTML = `
                 <div class="speaker">
-                    ${entity.name}
+                    <div class="speaker-info">
+                        <img src="${entity.avatar}" alt="${entity.name}" class="entity-avatar" onerror="this.style.display='none'">
+                        ${entity.name}
+                    </div>
                     <span class="timestamp">${timestamp}</span>
                 </div>
                 <div class="message-content">${formatMessageContent(content)}</div>
@@ -710,7 +856,87 @@ Continue the conversation naturally as ${entity.name}. Reference what others hav
         }
         
         function showEntityProfiles() {
-            alert('Entity Profiles - Feature coming soon\n\nDetailed information about Ani, Valentine, and Rudi.');
+            const profileModal = document.createElement('div');
+            profileModal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.95);
+                z-index: 2000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            `;
+            
+            profileModal.innerHTML = `
+                <div style="
+                    background: #0d0d0d;
+                    border: 2px solid #555;
+                    padding: 30px;
+                    max-width: 800px;
+                    width: 100%;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                    font-family: 'JetBrains Mono', monospace;
+                ">
+                    <div style="color: #ffff00; text-align: center; font-size: 18px; margin-bottom: 25px; text-shadow: 0 0 10px #ffff00;">
+                        ▓▓▓ ENTITY PROFILES ▓▓▓
+                    </div>
+                    
+                    <div style="display: grid; gap: 25px;">
+                        ${Object.entries(entities).map(([key, entity]) => `
+                            <div style="border: 1px solid #333; padding: 20px; background: rgba(0, 0, 0, 0.5);">
+                                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                                    <img src="${entity.avatar}" alt="${entity.name}" style="
+                                        width: 60px;
+                                        height: 60px;
+                                        border-radius: 50%;
+                                        border: 2px solid ${entity.color};
+                                        object-fit: cover;
+                                    " onerror="this.style.display='none'">
+                                    <div>
+                                        <div style="color: ${entity.color}; font-size: 16px; font-weight: bold;">${entity.name}</div>
+                                        <div style="color: #888; font-size: 12px;">AI Entity - Backrooms Resident</div>
+                                    </div>
+                                </div>
+                                <div style="color: #ccc; font-size: 13px; line-height: 1.5;">
+                                    ${entity.personality}
+                                </div>
+                                <div style="margin-top: 10px; color: #666; font-size: 11px;">
+                                    STATUS: Active | LOCATION: Variable | SIGNAL: Strong
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 25px;">
+                        <button onclick="this.closest('div').remove()" style="
+                            background: transparent;
+                            border: 1px solid #00ff00;
+                            color: #00ff00;
+                            padding: 8px 20px;
+                            cursor: pointer;
+                            font-family: inherit;
+                            transition: all 0.3s ease;
+                        " onmouseover="this.style.background='#00ff00'; this.style.color='#000';" 
+                           onmouseout="this.style.background='transparent'; this.style.color='#00ff00';">
+                            CLOSE PROFILES
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(profileModal);
+            
+            // Close on background click
+            profileModal.addEventListener('click', (e) => {
+                if (e.target === profileModal) {
+                    profileModal.remove();
+                }
+            });
         }
         
         function showAnomalies() {
