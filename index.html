@@ -529,19 +529,33 @@
         // Initialize Firebase connection
         async function initializeFirebase() {
             try {
+                console.log('🔥 Attempting Firebase connection...');
                 app = initializeApp(firebaseConfig);
                 database = getDatabase(app);
                 conversationRef = ref(database, 'backrooms-conversation');
                 
+                // Test Firebase connection
+                console.log('🔥 Testing Firebase read...');
+                const testSnapshot = await new Promise((resolve, reject) => {
+                    const unsubscribe = onValue(conversationRef, resolve, reject);
+                    setTimeout(() => {
+                        unsubscribe();
+                        reject(new Error('Firebase connection timeout'));
+                    }, 10000);
+                });
+                
+                console.log('🔥 Firebase connected successfully!');
+                
                 // Listen for conversation updates
                 onValue(conversationRef, (snapshot) => {
                     const data = snapshot.val();
+                    console.log('🔥 Firebase data received:', data);
                     if (data) {
                         handleConversationUpdate(data);
                     }
                 });
                 
-                document.getElementById('connectionStatus').textContent = 'CONNECTED TO GLOBAL STREAM';
+                document.getElementById('connectionStatus').textContent = 'CONNECTED TO GLOBAL STREAM (FIREBASE)';
                 document.getElementById('statusIndicator').className = 'status-indicator';
                 
                 // Start message generation polling
@@ -550,7 +564,8 @@
                 isInitialized = true;
                 
             } catch (error) {
-                console.error('Firebase initialization failed:', error);
+                console.error('🔥 Firebase initialization failed:', error);
+                console.log('🔄 Falling back to API-only mode...');
                 // Fallback to API-only mode
                 initializeWithoutFirebase();
             }
