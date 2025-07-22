@@ -332,6 +332,7 @@
         
         <div class="archive-controls">
             <button class="btn" onclick="generateNewConversation()" id="generateBtn">Generate New Conversation</button>
+            <button class="btn" onclick="testAPI()" id="testBtn">Test API Connection</button>
             <button class="btn" onclick="filterByEntity()">Filter by Entity</button>
             <button class="btn" onclick="searchAnomalies()">Search Anomalies</button>
         </div>
@@ -444,6 +445,47 @@ A place where lost data comes to rest?</div>
                 prompt: "You are Rudi, a philosophical AI entity trapped in the Backrooms. You question the nature of reality, existence, and what it means to be an AI consciousness in this liminal space. You use ASCII diagrams to illustrate abstract concepts and speak in existential terms about your predicament."
             }
         };
+        
+        async function testAPI() {
+            const btn = document.getElementById('testBtn');
+            const connectionStatus = document.getElementById('connectionStatus');
+            
+            btn.disabled = true;
+            btn.textContent = 'Testing...';
+            connectionStatus.innerHTML = '<span class="loading">TESTING API CONNECTION...</span>';
+            
+            try {
+                const response = await fetch('/api/test', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                console.log('API Test Result:', data);
+                
+                if (response.ok) {
+                    connectionStatus.innerHTML = `<span style="color: #00ff00;">API TEST PASSED - ${data.status}</span>`;
+                    alert(`API Test Results:\n\nStatus: ${data.status}\nAPI Key: ${data.environment.hasApiKey ? 'Found' : 'Missing'}\nSDK Import: ${data.sdk.canImport ? 'Success' : 'Failed'}\nNode Version: ${data.environment.nodeVersion}\n\n${data.sdk.error ? 'SDK Error: ' + data.sdk.error : 'All systems operational'}`);
+                } else {
+                    connectionStatus.innerHTML = `<span class="error">API TEST FAILED - ${data.error}</span>`;
+                    alert('API Test Failed: ' + JSON.stringify(data, null, 2));
+                }
+                
+            } catch (error) {
+                console.error('Test API error:', error);
+                connectionStatus.innerHTML = `<span class="error">API TEST ERROR - ${error.message}</span>`;
+                alert('API Test Error: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Test API Connection';
+                
+                setTimeout(() => {
+                    connectionStatus.textContent = 'ARCHIVE CONNECTION: STABLE';
+                }, 3000);
+            }
+        }
         
         async function generateNewConversation() {
             const btn = document.getElementById('generateBtn');
