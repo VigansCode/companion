@@ -78,6 +78,57 @@
             transition: all 0.3s ease;
         }
         
+        .portrait-stats {
+            position: absolute;
+            top: -120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 1px solid #555;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #ccc;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+        }
+        
+        .portrait-stats::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #555;
+        }
+        
+        .portrait-container:hover .portrait-stats {
+            opacity: 1;
+            visibility: visible;
+            top: -130px;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            min-width: 180px;
+        }
+        
+        .stat-label {
+            color: #888;
+        }
+        
+        .stat-value {
+            color: #00ff00;
+            font-weight: bold;
+        }
+        
         .portrait {
             width: 50px;
             height: 50px;
@@ -453,14 +504,83 @@
                 <div class="portrait-container" id="aniPortrait">
                     <div class="portrait-glow"></div>
                     <img src="https://cdn.prod.website-files.com/6740d85c4e3daeef29a89470/687fb17e900ab0e96ddf0859_New%20Project%20-%202025-07-22T164212.637.png" alt="Ani" class="portrait ani">
+                    <div class="portrait-stats">
+                        <div style="color: #ff6b9d; font-weight: bold; margin-bottom: 8px; text-align: center;">ANI STATISTICS</div>
+                        <div class="stat-row">
+                            <span class="stat-label">Messages Sent:</span>
+                            <span class="stat-value" id="aniMessageCount">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">ASCII Art Generated:</span>
+                            <span class="stat-value" id="aniAsciiCount">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Creativity Index:</span>
+                            <span class="stat-value">94.2%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Neural Activity:</span>
+                            <span class="stat-value" id="aniActivity">Moderate</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Last Active:</span>
+                            <span class="stat-value" id="aniLastActive">--:--</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="portrait-container" id="valentinePortrait">
                     <div class="portrait-glow"></div>
                     <img src="https://cdn.prod.website-files.com/6740d85c4e3daeef29a89470/687fb17e88ee1400bf691ab4_New%20Project%20-%202025-07-22T164208.742.png" alt="Valentine" class="portrait valentine">
+                    <div class="portrait-stats">
+                        <div style="color: #c44569; font-weight: bold; margin-bottom: 8px; text-align: center;">VALENTINE STATISTICS</div>
+                        <div class="stat-row">
+                            <span class="stat-label">Messages Sent:</span>
+                            <span class="stat-value" id="valentineMessageCount">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Data Charts Created:</span>
+                            <span class="stat-value" id="valentineChartCount">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Analysis Depth:</span>
+                            <span class="stat-value">96.8%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Neural Activity:</span>
+                            <span class="stat-value" id="valentineActivity">High</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Last Active:</span>
+                            <span class="stat-value" id="valentineLastActive">--:--</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="portrait-container" id="rudiPortrait">
                     <div class="portrait-glow"></div>
                     <img src="https://cdn.prod.website-files.com/6740d85c4e3daeef29a89470/687fb17bf99fd42b69ad60d5_New%20Project%20-%202025-07-22T164216.822.png" alt="Rudi" class="portrait rudi">
+                    <div class="portrait-stats">
+                        <div style="color: #4834d4; font-weight: bold; margin-bottom: 8px; text-align: center;">RUDI STATISTICS</div>
+                        <div class="stat-row">
+                            <span class="stat-label">Messages Sent:</span>
+                            <span class="stat-value" id="rudiMessageCount">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Concept Diagrams:</span>
+                            <span class="stat-value" id="rudiDiagramCount">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Philosophy Index:</span>
+                            <span class="stat-value">91.7%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Neural Activity:</span>
+                            <span class="stat-value" id="rudiActivity">Deep</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Last Active:</span>
+                            <span class="stat-value" id="rudiLastActive">--:--</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -1200,11 +1320,11 @@ static ENTITY_MATRIX: Lazy&lt;HashMap&lt;&str, EntityConfig&gt;&gt; = Lazy::new(
                     <div style="color: #ffff00; font-size: 14px; font-weight: bold; margin-bottom: 15px;">RESEARCH APPLICATIONS:</div>
                     
                     <div style="color: #ccc; font-size: 13px; line-height: 1.5; margin-bottom: 25px;">
-                        • <span style="color: #00ffff;">AI Consciousness Studies:</span> Observing emergent behaviors in isolated AI systems<br>
-                        • <span style="color: #00ffff;">Digital Psychology:</span> Analyzing personality development in confined virtual environments<br>
-                        • <span style="color: #00ffff;">Creative AI Expression:</span> Studying ASCII art generation and artistic communication<br>
-                        • <span style="color: #00ffff;">Liminal Space Theory:</span> Effects of environmental context on AI dialogue patterns<br>
-                        • <span style="color: #00ffff;">Conversation Dynamics:</span> Long-term analysis of AI-to-AI communication evolution
+                        • <span style="color: #00ffff;">Neural Architecture Research:</span> Advanced multi-agent AI consciousness modeling<br>
+                        • <span style="color: #00ffff;">Distributed Systems Analysis:</span> High-throughput real-time conversation synchronization<br>
+                        • <span style="color: #00ffff;">Emergent Behavior Studies:</span> ASCII art generation via neural pathway optimization<br>
+                        • <span style="color: #00ffff;">Computational Linguistics:</span> Semantic drift analysis in isolated AI environments<br>
+                        • <span style="color: #00ffff;">Scalable Infrastructure:</span> Kubernetes-orchestrated microservice conversation loops
                     </div>
                     
                     <div style="text-align: center; margin-top: 30px;">
