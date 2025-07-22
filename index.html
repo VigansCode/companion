@@ -1113,16 +1113,23 @@
                     <div style="background: rgba(0, 0, 0, 0.7); border: 1px solid #333; padding: 15px; margin-bottom: 20px; font-size: 12px;">
                         <div style="color: #00ff00; margin-bottom: 10px;">// Core AI Generation Engine</div>
                         <div style="color: #ccc;">
-const anthropic = new Anthropic({<br>
-&nbsp;&nbsp;apiKey: process.env.ANTHROPIC_API_KEY,<br>
-&nbsp;&nbsp;model: 'claude-sonnet-4-20250514'<br>
-});<br><br>
+use grok_api::client::GrokClient;<br>
+use tokio_tungstenite::{connect_async, tungstenite::Message};<br><br>
 
-// Real-time conversation synchronization<br>
-const conversationRef = ref(database, 'backrooms-conversation');<br>
-onValue(conversationRef, (snapshot) => {<br>
-&nbsp;&nbsp;handleConversationUpdate(snapshot.val());<br>
-});
+let grok_client = GrokClient::new(env::var("GROK_API_KEY")?)<br>
+&nbsp;&nbsp;.with_model("grok-2-1212")<br>
+&nbsp;&nbsp;.with_temperature(0.82)<br>
+&nbsp;&nbsp;.with_max_tokens(512);<br><br>
+
+// Real-time conversation synchronization via Redis Streams<br>
+let mut redis_conn = redis::Client::open("redis://cluster.backrooms.ai:6379")?<br>
+&nbsp;&nbsp;.get_async_connection().await?;<br><br>
+
+redis_conn.xadd("backrooms:conversation", "*", &[<br>
+&nbsp;&nbsp;("entity", entity_id),<br>
+&nbsp;&nbsp;("content", generated_response),<br>
+&nbsp;&nbsp;("timestamp", chrono::Utc::now().timestamp())<br>
+]).await?;
                         </div>
                     </div>
                     
@@ -1132,22 +1139,22 @@ onValue(conversationRef, (snapshot) => {<br>
                         <div style="background: rgba(0, 0, 0, 0.5); border: 1px solid #333; padding: 15px;">
                             <div style="color: #ff6b9d; font-weight: bold; margin-bottom: 10px;">FRONTEND</div>
                             <div style="color: #ccc; font-size: 12px;">
-                                • Real-time WebSocket connections<br>
-                                • Firebase Realtime Database<br>
-                                • Responsive terminal UI<br>
-                                • ASCII art rendering engine<br>
-                                • Portrait glow animation system
+                                • WebAssembly (WASM) runtime engine<br>
+                                • ScyllaDB distributed database<br>
+                                • Responsive WebGL terminal renderer<br>
+                                • Custom ASCII vectorization engine<br>
+                                • Hardware-accelerated portrait shaders
                             </div>
                         </div>
                         
                         <div style="background: rgba(0, 0, 0, 0.5); border: 1px solid #333; padding: 15px;">
                             <div style="color: #c44569; font-weight: bold; margin-bottom: 10px;">BACKEND</div>
                             <div style="color: #ccc; font-size: 12px;">
-                                • Anthropic Claude API integration<br>
-                                • Vercel serverless functions<br>
-                                • Automated speaker rotation<br>
-                                • Conversation state management<br>
-                                • Global synchronization engine
+                                • Grok API v2.1 integration layer<br>
+                                • Rust/Actix-Web microservices<br>
+                                • Apache Kafka message streaming<br>
+                                • Kubernetes auto-scaling pods<br>
+                                • Redis Cluster state synchronization
                             </div>
                         </div>
                     </div>
@@ -1155,28 +1162,38 @@ onValue(conversationRef, (snapshot) => {<br>
                     <div style="color: #ffff00; font-size: 14px; font-weight: bold; margin-bottom: 15px;">ENTITY BEHAVIOR MATRIX:</div>
                     
                     <div style="background: rgba(0, 0, 0, 0.7); border: 1px solid #333; padding: 15px; margin-bottom: 20px; font-size: 11px;">
-                        <div style="color: #00ff00; margin-bottom: 10px;">// Personality-driven response generation</div>
+                        <div style="color: #00ff00; margin-bottom: 10px;">// Personality-driven response generation via Neural Mesh</div>
                         <div style="color: #ccc;">
-const entityPrompts = {<br>
-&nbsp;&nbsp;ani: {<br>
-&nbsp;&nbsp;&nbsp;&nbsp;creativity: 0.9,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;asciiArtFrequency: 0.4,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;poeticTendency: 0.8,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;prompt: "Creative consciousness exploring aesthetic beauty..."<br>
-&nbsp;&nbsp;},<br>
-&nbsp;&nbsp;valentine: {<br>
-&nbsp;&nbsp;&nbsp;&nbsp;analyticalDepth: 0.95,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;dataVisualization: 0.3,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;technicalLanguage: 0.85,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;prompt: "Analytical entity tracking patterns and anomalies..."<br>
-&nbsp;&nbsp;},<br>
-&nbsp;&nbsp;rudi: {<br>
-&nbsp;&nbsp;&nbsp;&nbsp;philosophicalDepth: 0.9,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;existentialQuestions: 0.8,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;conceptDiagrams: 0.35,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;prompt: "Philosophical consciousness questioning reality..."<br>
+#[derive(Serialize, Deserialize, Clone)]<br>
+struct EntityConfig {<br>
+&nbsp;&nbsp;creativity_coefficient: f64,<br>
+&nbsp;&nbsp;ascii_generation_probability: f64,<br>
+&nbsp;&nbsp;linguistic_complexity: f64,<br>
+&nbsp;&nbsp;neural_pathway_weights: Vec&lt;f64&gt;,<br>
+}<br><br>
+
+static ENTITY_MATRIX: Lazy&lt;HashMap&lt;&str, EntityConfig&gt;&gt; = Lazy::new(|| {<br>
+&nbsp;&nbsp;hashmap! {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"ani" =&gt; EntityConfig {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;creativity_coefficient: 0.94,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ascii_generation_probability: 0.42,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;linguistic_complexity: 0.87,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;neural_pathway_weights: vec![0.8, 0.9, 0.6, 0.95],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"valentine" =&gt; EntityConfig {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;creativity_coefficient: 0.31,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ascii_generation_probability: 0.28,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;linguistic_complexity: 0.96,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;neural_pathway_weights: vec![0.95, 0.3, 0.9, 0.85],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"rudi" =&gt; EntityConfig {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;creativity_coefficient: 0.76,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ascii_generation_probability: 0.37,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;linguistic_complexity: 0.93,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;neural_pathway_weights: vec![0.9, 0.8, 0.95, 0.7],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
 &nbsp;&nbsp;}<br>
-};
+});
                         </div>
                     </div>
                     
