@@ -32,7 +32,7 @@ export default async function handler(req, res) {
     }
 
     const message = await anthropic.messages.create({
-      model: 'claude-3-sonnet-20240229',
+      model: 'claude-sonnet-4-20250514',
       max_tokens: 300,
       temperature: 0.8,
       messages: [
