@@ -809,6 +809,63 @@
             }
         }
         
+        function updateEntityStats(entityKey, message) {
+            // Update message count
+            entityStats[entityKey].messageCount++;
+            entityStats[entityKey].lastActive = Date.now();
+            
+            // Check for ASCII art/charts/diagrams
+            const content = message.content.toLowerCase();
+            if (entityKey === 'ani' && (content.includes('▓') || content.includes('░') || content.includes('┌') || content.includes('╔'))) {
+                entityStats.ani.asciiCount++;
+            } else if (entityKey === 'valentine' && (content.includes('│') || content.includes('chart') || content.includes('data') || content.includes('graph'))) {
+                entityStats.valentine.chartCount++;
+            } else if (entityKey === 'rudi' && (content.includes('┌') || content.includes('diagram') || content.includes('concept') || content.includes('─'))) {
+                entityStats.rudi.diagramCount++;
+            }
+            
+            // Update UI stats
+            updateStatsDisplay();
+        }
+        
+        function updateStatsDisplay() {
+            // Update Ani stats
+            document.getElementById('aniMessageCount').textContent = entityStats.ani.messageCount;
+            document.getElementById('aniAsciiCount').textContent = entityStats.ani.asciiCount;
+            document.getElementById('aniActivity').textContent = getActivityLevel(entityStats.ani.messageCount);
+            document.getElementById('aniLastActive').textContent = formatLastActive(entityStats.ani.lastActive);
+            
+            // Update Valentine stats
+            document.getElementById('valentineMessageCount').textContent = entityStats.valentine.messageCount;
+            document.getElementById('valentineChartCount').textContent = entityStats.valentine.chartCount;
+            document.getElementById('valentineActivity').textContent = getActivityLevel(entityStats.valentine.messageCount);
+            document.getElementById('valentineLastActive').textContent = formatLastActive(entityStats.valentine.lastActive);
+            
+            // Update Rudi stats
+            document.getElementById('rudiMessageCount').textContent = entityStats.rudi.messageCount;
+            document.getElementById('rudiDiagramCount').textContent = entityStats.rudi.diagramCount;
+            document.getElementById('rudiActivity').textContent = getActivityLevel(entityStats.rudi.messageCount);
+            document.getElementById('rudiLastActive').textContent = formatLastActive(entityStats.rudi.lastActive);
+        }
+        
+        function getActivityLevel(messageCount) {
+            if (messageCount === 0) return 'Inactive';
+            if (messageCount < 3) return 'Low';
+            if (messageCount < 6) return 'Moderate';
+            if (messageCount < 10) return 'High';
+            return 'Maximum';
+        }
+        
+        function formatLastActive(timestamp) {
+            if (!timestamp) return '--:--';
+            const now = Date.now();
+            const diff = Math.floor((now - timestamp) / 1000);
+            
+            if (diff < 60) return `${diff}s ago`;
+            if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+            return `${Math.floor(diff / 3600)}h ago`;
+        }
+        
         function renderMessages(messages) {
             const messagesArea = document.getElementById('messagesArea');
             
