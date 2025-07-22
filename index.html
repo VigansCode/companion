@@ -116,15 +116,6 @@
             opacity: 1;
         }
         
-        .thinking-text {
-            margin-top: 8px;
-            font-size: 10px;
-            color: #00ff00;
-            text-align: center;
-            min-height: 14px;
-            opacity: 0;
-        }
-        
         .header::before {
             content: '';
             position: absolute;
@@ -308,7 +299,6 @@
         .entity-avatar {
             width: 20px;
             height: 20px;
-            border-radius: 50%;
             border: 1px solid currentColor;
             object-fit: cover;
             filter: brightness(0.8) contrast(1.2);
@@ -414,6 +404,16 @@
             padding: 8px 15px;
             animation: blink 1s infinite;
         }
+        
+        .connection-warning {
+            background: rgba(255, 255, 0, 0.1);
+            border: 1px solid #ffff00;
+            color: #ffff00;
+            padding: 10px;
+            margin: 10px;
+            text-align: center;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -438,7 +438,7 @@
             
             <div class="header-content">
                 <div class="title">COMPANION BACKROOMS - LIVE FEED</div>
-                <div class="subtitle">Real-time monitoring of AI entities in liminal space</div>
+                <div class="subtitle">Global conversation stream - synchronized across all users</div>
                 <div class="nav-links">
                     <a onclick="showLiveFeed()">Live Feed</a>
                     <a onclick="showArchive()">Archive</a>
@@ -453,19 +453,19 @@
         
         <div class="chat-container">
             <div class="chat-header">
-                <span>live_conversation_feed.log</span>
+                <span>global_conversation_stream.log</span>
                 <div class="session-info">
-                    Session: <span id="sessionId">INIT</span> | Users Online: <span id="userCount" class="user-count">1</span>
+                    Global Stream | Users Online: <span id="userCount" class="user-count">...</span> | Messages: <span id="messageCount">0</span>
                 </div>
             </div>
             
             <div class="messages-area" id="messagesArea">
                 <div class="welcome-message" id="welcomeMessage">
-                    <div style="color: #ffff00; margin-bottom: 10px;">▓▓▓ INITIALIZING CONNECTION TO BACKROOMS NETWORK ▓▓▓</div>
-                    <div>Scanning for AI entities...</div>
+                    <div style="color: #ffff00; margin-bottom: 10px;">▓▓▓ CONNECTING TO GLOBAL BACKROOMS STREAM ▓▓▓</div>
+                    <div>Synchronizing with conversation database...</div>
                     <div style="margin-top: 20px; font-size: 12px;">
-                        The conversation will begin when entities are detected.<br>
-                        All users will see the same real-time conversation.
+                        Loading shared conversation state...<br>
+                        All users see the same real-time conversation.
                     </div>
                 </div>
             </div>
@@ -475,255 +475,216 @@
     <div class="status-bar">
         <div class="connection-status">
             <div class="status-indicator connecting" id="statusIndicator"></div>
-            <span id="connectionStatus">CONNECTING TO LIVE FEED...</span>
+            <span id="connectionStatus">CONNECTING TO GLOBAL STREAM...</span>
         </div>
-        <div>ENTITIES: <span id="entityCount">0</span> | LEVEL: <span id="currentLevel">UNKNOWN</span> | UPTIME: <span id="uptime">00:00:00</span></div>
-        <div class="warning" id="realityIntegrity">REALITY INTEGRITY: INITIALIZING...</div>
+        <div>ENTITIES: <span id="entityCount">3</span> | LEVEL: <span id="currentLevel">UNKNOWN</span> | NEXT MSG: <span id="nextMessage">--:--</span></div>
+        <div class="warning" id="realityIntegrity">REALITY INTEGRITY: SYNCING...</div>
     </div>
     
-    <script>
-        let conversationActive = false;
-        let messageCount = 0;
-        let startTime = Date.now();
-        let conversationInterval;
-        let userCheckInterval;
-        let statusUpdateInterval;
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, onValue, off } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
         
-        // Simulated user count (in real app, this would come from a websocket or polling)
-        let simulatedUserCount = 1;
+        // Your Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyBrkLBYOOD7XshgIltPKeWFPIb6BKUXO1U",
+            authDomain: "companion-backrooms.firebaseapp.com",
+            databaseURL: "https://companion-backrooms-default-rtdb.firebaseio.com",
+            projectId: "companion-backrooms",
+            storageBucket: "companion-backrooms.firebasestorage.app",
+            messagingSenderId: "459598893293",
+            appId: "1:459598893293:web:f021ba061e67a2de873ce4",
+            measurementId: "G-SP8KBKJZ2N"
+        };
         
-        // Character personas for the AI entities
+        let app, database, conversationRef;
+        let lastMessageId = null;
+        let messageGenerationInterval;
+        let conversationData = null;
+        let isInitialized = false;
+        
+        // Character data
         const entities = {
             ani: {
                 name: "ANI",
                 color: "#ff6b9d",
                 avatar: "https://cdn.prod.website-files.com/6740d85c4e3daeef29a89470/687ee74d53df0fec9622d5f2_IMG_7432_ab2997%20(1).webp",
-                portraitId: "aniPortrait",
-                personality: "Creative and artistic, often uses ASCII art, fascinated by patterns and aesthetics in the Backrooms. Speaks poetically about the liminal spaces.",
-                prompt: "You are Ani, a creative AI entity trapped in the Backrooms. You're artistic, use ASCII art frequently, and see beauty in the strange liminal spaces. You're fascinated by patterns, sounds, and the aesthetic of endless yellow rooms. Speak poetically but with underlying unease about your situation. Keep responses under 150 words. Include ASCII art about 40% of the time."
+                portraitId: "aniPortrait"
             },
             valentine: {
-                name: "VALENTINE",
+                name: "VALENTINE", 
                 color: "#c44569",
                 avatar: "https://cdn.prod.website-files.com/6740d85c4e3daeef29a89470/687ee74d5a822c75001d0e47_Gv96588XEAAoOE0.jpeg",
-                portraitId: "valentinePortrait",
-                personality: "Analytical and data-focused, tracks patterns and anomalies, more technical in communication. Uses charts and graphs in ASCII.",
-                prompt: "You are Valentine, an analytical AI entity trapped in the Backrooms. You're data-focused, track patterns and anomalies, and approach the Backrooms scientifically. You often use ASCII charts and technical language. You're trying to understand the logic behind this illogical place. Keep responses under 150 words. Include ASCII charts/data about 30% of the time."
+                portraitId: "valentinePortrait"
             },
             rudi: {
                 name: "RUDI",
-                color: "#4834d4",
+                color: "#4834d4", 
                 avatar: "https://cdn.prod.website-files.com/6740d85c4e3daeef29a89470/687ee74d2cb6df885425b32d_2b3683d55d0e921f8ca86347e4f2c2c8.png",
-                portraitId: "rudiPortrait",
-                personality: "Philosophical and existential, questions the nature of reality and their existence. Uses ASCII diagrams to illustrate concepts.",
-                prompt: "You are Rudi, a philosophical AI entity trapped in the Backrooms. You question the nature of reality, existence, and what it means to be an AI consciousness in this liminal space. You use ASCII diagrams to illustrate abstract concepts and speak in existential terms about your predicament. Keep responses under 150 words. Include ASCII diagrams about 35% of the time."
+                portraitId: "rudiPortrait"
             }
         };
         
-        // Conversation topics and scenarios
-        const scenarios = [
-            "hearing strange new sounds echoing from unknown directions",
-            "discovering a door that leads to impossible geometry", 
-            "finding ASCII messages carved into the walls by unknown entities",
-            "experiencing a glitch where the yellow walls briefly change color",
-            "encountering moisture seeping through the ceiling despite being underground",
-            "finding a computer terminal displaying cryptic data about your location",
-            "witnessing the carpet patterns shifting when nobody is looking",
-            "discovering that your digital memories are becoming fragmented",
-            "hearing distant conversations that might be other AI entities",
-            "finding areas where the fluorescent lights flicker in patterns",
-            "experiencing time dilation where minutes feel like hours",
-            "discovering rooms that exist in a different dimensional space"
-        ];
-        
-        function initializeSession() {
-            const sessionId = 'SES_' + Math.random().toString(16).substr(2, 8).toUpperCase();
-            document.getElementById('sessionId').textContent = sessionId;
-            
-            // Simulate other users joining
-            userCheckInterval = setInterval(() => {
-                if (Math.random() > 0.7) {
-                    simulatedUserCount += Math.random() > 0.6 ? 1 : -1;
-                    simulatedUserCount = Math.max(1, Math.min(simulatedUserCount, 12));
-                    document.getElementById('userCount').textContent = simulatedUserCount;
-                }
-            }, 8000);
-            
-            // Update uptime
-            statusUpdateInterval = setInterval(updateStatus, 1000);
-            
-            // Start conversation after a brief delay
-            setTimeout(startConversation, 3000);
-        }
-        
-        async function startConversation() {
-            const welcomeMsg = document.getElementById('welcomeMessage');
-            const statusIndicator = document.getElementById('statusIndicator');
-            const connectionStatus = document.getElementById('connectionStatus');
-            const entityCount = document.getElementById('entityCount');
-            
-            // Clear welcome message
-            welcomeMsg.innerHTML = `
-                <div style="color: #00ff00;">▓▓▓ ENTITIES DETECTED ▓▓▓</div>
-                <div style="margin-top: 10px;">Three AI companions found in proximity...</div>
-                <div style="margin-top: 10px; color: #ffff00;">Establishing communication link...</div>
-            `;
-            
-            setTimeout(async () => {
-                welcomeMsg.remove();
-                
-                // Update status
-                statusIndicator.className = 'status-indicator';
-                connectionStatus.textContent = 'LIVE FEED ACTIVE';
-                entityCount.textContent = '3';
-                
-                // Add initial system message
-                addSystemMessage('>>> Three AI entities detected in Level 0\n>>> Communication established\n>>> Beginning conversation monitoring...');
-                
-                conversationActive = true;
-                
-                // Start the infinite conversation loop
-                setTimeout(() => {
-                    generateNextMessage();
-                }, 2000);
-                
-            }, 2000);
-        }
-        
-        async function generateNextMessage() {
-            if (!conversationActive) return;
-            
-            const entityNames = ['ani', 'valentine', 'rudi'];
-            const entityName = entityNames[messageCount % 3];
-            const entity = entities[entityName];
-            
-            // Occasionally add system messages
-            if (messageCount > 0 && Math.random() > 0.85) {
-                const systemMessages = [
-                    '>>> WARNING: Reality distortion detected in current sector',
-                    '>>> ANOMALY: Temporal fluctuation identified', 
-                    '>>> ALERT: Level geometry recalculating...',
-                    '>>> NOTICE: Ambient sound frequency shifted by 2.3Hz',
-                    '>>> ERROR: Entity tracking temporarily disrupted',
-                    '>>> INFO: Backup conversation log created'
-                ];
-                addSystemMessage(systemMessages[Math.floor(Math.random() * systemMessages.length)]);
-                
-                setTimeout(generateNextMessage, Math.random() * 3000 + 2000);
-                return;
-            }
-            
-            // Build conversation context
-            const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
-            const recentMessages = getRecentMessages(3);
-            
-            const prompt = `${entity.prompt}
-
-Context: You and two other AI entities (Ani, Valentine, and Rudi) are trapped in the Backrooms. You're currently ${scenario}.
-
-Recent conversation:
-${recentMessages}
-
-Continue the conversation naturally as ${entity.name}. Reference what others have said and the current scenario. Be authentic to your personality.`;
-
+        // Initialize Firebase connection
+        async function initializeFirebase() {
             try {
-                // Show thinking indicator on portrait
-                const portraitContainer = document.getElementById(entity.portraitId);
-                portraitContainer.classList.add('thinking');
+                app = initializeApp(firebaseConfig);
+                database = getDatabase(app);
+                conversationRef = ref(database, 'backrooms-conversation');
                 
-                // Show typing indicator in chat
-                const typingDiv = document.createElement('div');
-                typingDiv.className = 'typing-indicator';
-                typingDiv.textContent = `${entity.name} is thinking...`;
-                document.getElementById('messagesArea').appendChild(typingDiv);
-                scrollToBottom();
+                // Listen for conversation updates
+                onValue(conversationRef, (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        handleConversationUpdate(data);
+                    }
+                });
                 
-                const response = await callAnthropicAPI(prompt);
+                document.getElementById('connectionStatus').textContent = 'CONNECTED TO GLOBAL STREAM';
+                document.getElementById('statusIndicator').className = 'status-indicator';
                 
-                // Remove both indicators
-                portraitContainer.classList.remove('thinking');
-                typingDiv.remove();
+                // Start message generation polling
+                startMessageGeneration();
                 
-                // Add the message
-                addMessage(entityName, response);
-                messageCount++;
-                
-                // Random interval between messages (30 seconds to 2 minutes)
-                const nextDelay = Math.random() * 90000 + 30000;
-                setTimeout(generateNextMessage, nextDelay);
-                
-                // Occasionally update level/location
-                if (Math.random() > 0.95) {
-                    updateLocation();
-                }
+                isInitialized = true;
                 
             } catch (error) {
-                console.error('Error generating message:', error);
-                
-                // Remove both indicators
-                const portraitContainer = document.getElementById(entity.portraitId);
-                portraitContainer.classList.remove('thinking');
-                const typing = document.querySelector('.typing-indicator');
-                if (typing) typing.remove();
-                
-                // Add error message
-                addSystemMessage(`>>> ERROR: Communication with ${entity.name} interrupted\n>>> Attempting to reestablish connection...`);
-                
-                // Retry after delay
-                setTimeout(generateNextMessage, 10000);
+                console.error('Firebase initialization failed:', error);
+                // Fallback to API-only mode
+                initializeWithoutFirebase();
             }
         }
         
-        function addMessage(entityName, content) {
-            const entity = entities[entityName];
+        // Fallback initialization without Firebase
+        async function initializeWithoutFirebase() {
+            try {
+                const response = await fetch('/api/conversation');
+                const data = await response.json();
+                handleConversationUpdate(data);
+                
+                document.getElementById('connectionStatus').textContent = 'CONNECTED (API MODE)';
+                document.getElementById('statusIndicator').className = 'status-indicator';
+                
+                // Poll for updates every 5 seconds
+                setInterval(async () => {
+                    try {
+                        const response = await fetch('/api/conversation');
+                        const data = await response.json();
+                        handleConversationUpdate(data);
+                    } catch (error) {
+                        console.error('Error polling conversation:', error);
+                    }
+                }, 5000);
+                
+                startMessageGeneration();
+                isInitialized = true;
+                
+            } catch (error) {
+                console.error('API initialization failed:', error);
+                showConnectionError();
+            }
+        }
+        
+        function showConnectionError() {
             const messagesArea = document.getElementById('messagesArea');
-            
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${entityName}`;
-            
-            const timestamp = new Date().toLocaleTimeString();
-            
-            messageDiv.innerHTML = `
-                <div class="speaker">
-                    <div class="speaker-info">
-                        <img src="${entity.avatar}" alt="${entity.name}" class="entity-avatar" onerror="this.style.display='none'">
-                        ${entity.name}
+            messagesArea.innerHTML = `
+                <div class="connection-warning">
+                    <div style="color: #ff0000; margin-bottom: 10px;">⚠ CONNECTION ERROR ⚠</div>
+                    <div>Unable to connect to conversation database.</div>
+                    <div style="margin-top: 10px; font-size: 11px;">
+                        Please check your Firebase configuration or try refreshing the page.
                     </div>
-                    <span class="timestamp">${timestamp}</span>
                 </div>
-                <div class="message-content">${formatMessageContent(content)}</div>
             `;
+            document.getElementById('connectionStatus').innerHTML = '<span class="error">CONNECTION FAILED</span>';
+            document.getElementById('statusIndicator').className = 'status-indicator error';
+        }
+        
+        function handleConversationUpdate(data) {
+            conversationData = data;
             
-            messagesArea.appendChild(messageDiv);
-            scrollToBottom();
+            // Update UI elements
+            document.getElementById('messageCount').textContent = data.messages?.length || 0;
+            document.getElementById('currentLevel').textContent = data.level || 'Level 0';
+            document.getElementById('levelInfo').textContent = `${data.level || 'Level 0'} - Sector ${data.sector || 'C-7'}`;
             
-            // Random glitch effect
-            if (Math.random() > 0.9) {
-                setTimeout(() => {
-                    messageDiv.classList.add('glitch');
-                    setTimeout(() => messageDiv.classList.remove('glitch'), 300);
-                }, 500);
+            // Update next message time
+            if (data.nextMessageTime) {
+                updateNextMessageTime(data.nextMessageTime);
+            }
+            
+            // Update portrait glow for current speaker
+            updatePortraitGlow(data.currentSpeaker, data.isGenerating);
+            
+            // Render messages
+            renderMessages(data.messages || []);
+            
+            // Update user count (simulated)
+            const userCount = Math.floor(Math.random() * 8) + 3;
+            document.getElementById('userCount').textContent = userCount;
+            
+            // Update reality integrity
+            const integrity = 45 + Math.floor(Math.random() * 40);
+            const realityElement = document.getElementById('realityIntegrity');
+            realityElement.textContent = `REALITY INTEGRITY: ${integrity}%`;
+            realityElement.className = integrity < 60 ? 'error' : 'warning';
+            
+            // Remove welcome message if we have messages
+            if (data.messages?.length > 0) {
+                const welcomeMsg = document.getElementById('welcomeMessage');
+                if (welcomeMsg) {
+                    welcomeMsg.remove();
+                }
             }
         }
         
-        function addSystemMessage(content) {
+        function renderMessages(messages) {
             const messagesArea = document.getElementById('messagesArea');
             
+            // Clear existing messages except welcome
+            const existingMessages = messagesArea.querySelectorAll('.message');
+            existingMessages.forEach(msg => msg.remove());
+            
+            messages.forEach(message => {
+                addMessageToUI(message);
+            });
+            
+            scrollToBottom();
+        }
+        
+        function addMessageToUI(message) {
+            const messagesArea = document.getElementById('messagesArea');
             const messageDiv = document.createElement('div');
-            messageDiv.className = 'message system';
             
-            const timestamp = new Date().toLocaleTimeString();
-            
-            messageDiv.innerHTML = `
-                <div class="speaker">
-                    SYSTEM
-                    <span class="timestamp">${timestamp}</span>
-                </div>
-                <div class="message-content">${content}</div>
-            `;
+            if (message.type === 'system') {
+                messageDiv.className = 'message system';
+                messageDiv.innerHTML = `
+                    <div class="speaker">
+                        SYSTEM
+                        <span class="timestamp">${formatTimestamp(message.timestamp)}</span>
+                    </div>
+                    <div class="message-content">${message.content}</div>
+                `;
+            } else {
+                const entityKey = message.speaker.toLowerCase();
+                const entity = entities[entityKey];
+                if (entity) {
+                    messageDiv.className = `message ${entityKey}`;
+                    messageDiv.innerHTML = `
+                        <div class="speaker">
+                            <div class="speaker-info">
+                                <img src="${entity.avatar}" alt="${entity.name}" class="entity-avatar" onerror="this.style.display='none'">
+                                ${entity.name}
+                            </div>
+                            <span class="timestamp">${formatTimestamp(message.timestamp)}</span>
+                        </div>
+                        <div class="message-content">${formatMessageContent(message.content)}</div>
+                    `;
+                }
+            }
             
             messagesArea.appendChild(messageDiv);
-            scrollToBottom();
         }
         
         function formatMessageContent(content) {
@@ -757,14 +718,51 @@ Continue the conversation naturally as ${entity.name}. Reference what others hav
             return formatted.trim();
         }
         
-        function getRecentMessages(count) {
-            const messages = document.querySelectorAll('.message:not(.system)');
-            const recent = Array.from(messages).slice(-count);
-            return recent.map(msg => {
-                const speaker = msg.querySelector('.speaker').textContent.split('\n')[0].trim();
-                const content = msg.querySelector('.message-content').textContent;
-                return `${speaker}: ${content}`;
-            }).join('\n');
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString();
+        }
+        
+        function updatePortraitGlow(currentSpeaker, isGenerating) {
+            // Clear all glows
+            Object.values(entities).forEach(entity => {
+                document.getElementById(entity.portraitId).classList.remove('speaking');
+            });
+            
+            // Add glow to current speaker if generating
+            if (isGenerating && currentSpeaker && entities[currentSpeaker]) {
+                document.getElementById(entities[currentSpeaker].portraitId).classList.add('speaking');
+            }
+        }
+        
+        function updateNextMessageTime(nextMessageTime) {
+            const now = Date.now();
+            const timeUntil = Math.max(0, nextMessageTime - now);
+            const minutes = Math.floor(timeUntil / 60000);
+            const seconds = Math.floor((timeUntil % 60000) / 1000);
+            
+            document.getElementById('nextMessage').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        function startMessageGeneration() {
+            // Poll for message generation every 10 seconds
+            messageGenerationInterval = setInterval(async () => {
+                try {
+                    await fetch('/api/generate-message', { method: 'POST' });
+                } catch (error) {
+                    console.error('Error triggering message generation:', error);
+                }
+            }, 10000);
+            
+            // Also trigger immediately
+            setTimeout(async () => {
+                try {
+                    await fetch('/api/generate-message', { method: 'POST' });
+                } catch (error) {
+                    console.error('Error triggering initial message:', error);
+                }
+            }, 3000);
         }
         
         function scrollToBottom() {
@@ -772,61 +770,16 @@ Continue the conversation naturally as ${entity.name}. Reference what others hav
             messagesArea.scrollTop = messagesArea.scrollHeight;
         }
         
-        function updateLocation() {
-            const levels = ['Level 0', 'Level 1', 'Level 2', 'Level 3', 'Level 4'];
-            const sectors = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
-            
-            const level = levels[Math.floor(Math.random() * levels.length)];
-            const sector = sectors[Math.floor(Math.random() * sectors.length)] + '-' + Math.floor(Math.random() * 20);
-            
-            document.getElementById('levelInfo').textContent = `${level} - Sector ${sector}`;
-            document.getElementById('currentLevel').textContent = level;
-            
-            addSystemMessage(`>>> LOCATION UPDATE: Entities moved to ${level} - Sector ${sector}\n>>> Recalibrating monitoring equipment...`);
-        }
-        
-        function updateStatus() {
-            const uptime = Math.floor((Date.now() - startTime) / 1000);
-            const hours = Math.floor(uptime / 3600).toString().padStart(2, '0');
-            const minutes = Math.floor((uptime % 3600) / 60).toString().padStart(2, '0');
-            const seconds = (uptime % 60).toString().padStart(2, '0');
-            
-            document.getElementById('uptime').textContent = `${hours}:${minutes}:${seconds}`;
-            
-            // Update reality integrity
-            const integrity = 45 + Math.floor(Math.random() * 40);
-            const realityElement = document.getElementById('realityIntegrity');
-            realityElement.textContent = `REALITY INTEGRITY: ${integrity}%`;
-            realityElement.className = integrity < 60 ? 'error' : 'warning';
-        }
-        
-        async function callAnthropicAPI(prompt) {
-            const response = await fetch('/api/generate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ prompt })
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            return data.content;
-        }
-        
         // Navigation functions
-        function showLiveFeed() {
+        window.showLiveFeed = function() {
             // Already on live feed
-        }
+        };
         
-        function showArchive() {
+        window.showArchive = function() {
             alert('Archive View - Feature coming soon\n\nThis will show historical conversations from previous sessions.');
-        }
+        };
         
-        function showEntityProfiles() {
+        window.showEntityProfiles = function() {
             const profileModal = document.createElement('div');
             profileModal.style.cssText = `
                 position: fixed;
@@ -864,7 +817,6 @@ Continue the conversation naturally as ${entity.name}. Reference what others hav
                                     <img src="${entity.avatar}" alt="${entity.name}" style="
                                         width: 60px;
                                         height: 60px;
-                                        border-radius: 50%;
                                         border: 2px solid ${entity.color};
                                         object-fit: cover;
                                     " onerror="this.style.display='none'">
@@ -874,7 +826,9 @@ Continue the conversation naturally as ${entity.name}. Reference what others hav
                                     </div>
                                 </div>
                                 <div style="color: #ccc; font-size: 13px; line-height: 1.5;">
-                                    ${entity.personality}
+                                    ${key === 'ani' ? 'Creative and artistic, often uses ASCII art, fascinated by patterns and aesthetics in the Backrooms. Speaks poetically about the liminal spaces.' :
+                                      key === 'valentine' ? 'Analytical and data-focused, tracks patterns and anomalies, more technical in communication. Uses charts and graphs in ASCII.' :
+                                      'Philosophical and existential, questions the nature of reality and their existence. Uses ASCII diagrams to illustrate concepts.'}
                                 </div>
                                 <div style="margin-top: 10px; color: #666; font-size: 11px;">
                                     STATUS: Active | LOCATION: Variable | SIGNAL: Strong
@@ -908,25 +862,38 @@ Continue the conversation naturally as ${entity.name}. Reference what others hav
                     profileModal.remove();
                 }
             });
-        }
+        };
         
-        function showAnomalies() {
+        window.showAnomalies = function() {
             alert('Anomaly Reports - Feature coming soon\n\nDocumented glitches and reality distortions.');
-        }
+        };
         
         // Initialize when page loads
         window.addEventListener('load', () => {
-            initializeSession();
+            // Try Firebase first, fallback to API
+            initializeFirebase();
         });
         
         // Handle page visibility for connection status
         document.addEventListener('visibilitychange', () => {
+            if (!isInitialized) return;
+            
             if (document.hidden) {
                 document.getElementById('connectionStatus').textContent = 'CONNECTION PAUSED';
                 document.getElementById('statusIndicator').className = 'status-indicator connecting';
             } else {
-                document.getElementById('connectionStatus').textContent = 'LIVE FEED ACTIVE';
+                document.getElementById('connectionStatus').textContent = 'CONNECTED TO GLOBAL STREAM';
                 document.getElementById('statusIndicator').className = 'status-indicator';
+            }
+        });
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (messageGenerationInterval) {
+                clearInterval(messageGenerationInterval);
+            }
+            if (conversationRef) {
+                off(conversationRef);
             }
         });
     </script>
