@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Companion Backrooms - Archive Terminal</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0d0d0d;
+            color: #00ff00;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            overflow-x: hidden;
+        }
+        
+        .terminal-container {
+            min-height: 100vh;
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(255, 255, 0, 0.05) 0%, transparent 50%),
+                linear-gradient(0deg, rgba(0, 0, 0, 0.8) 0%, rgba(13, 13, 13, 1) 100%);
+            padding: 20px;
+            position: relative;
+        }
+        
+        .scan-line {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00ff00, transparent);
+            animation: scan 2s linear infinite;
+            z-index: 1000;
+        }
+        
+        @keyframes scan {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100vh); }
+        }
+        
+        .header {
+            border: 2px solid #555;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            position: relative;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 0, 0.03) 2px,
+                rgba(0, 255, 0, 0.03) 4px
+            );
+            pointer-events: none;
+        }
+        
+        .title {
+            color: #ffff00;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #ffff00;
+        }
+        
+        .subtitle {
+            color: #00ffff;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .nav-links {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .nav-links a {
+            color: #ffff00;
+            text-decoration: underline;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .nav-links a:hover {
+            color: #ffffff;
+            text-shadow: 0 0 5px #ffff00;
+        }
+        
+        .chat-archive {
+            border: 1px solid #333;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .chat-header {
+            color: #ffff00;
+            border-bottom: 1px solid #555;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-id {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-left: 3px solid;
+            background: rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+        
+        .message::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 100px,
+                rgba(255, 255, 255, 0.01) 100px,
+                rgba(255, 255, 255, 0.01) 101px
+            );
+            pointer-events: none;
+        }
+        
+        .ani {
+            border-left-color: #ff6b9d;
+            color: #ff6b9d;
+        }
+        
+        .valentine {
+            border-left-color: #c44569;
+            color: #c44569;
+        }
+        
+        .rudi {
+            border-left-color: #4834d4;
+            color: #4834d4;
+        }
+        
+        .system {
+            border-left-color: #ffff00;
+            color: #ffff00;
+            font-style: italic;
+        }
+        
+        .speaker {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .timestamp {
+            font-size: 11px;
+            color: #666;
+            font-weight: normal;
+        }
+        
+        .message-content {
+            color: #ccc;
+            margin-left: 10px;
+            white-space: pre-wrap;
+        }
+        
+        .ascii-art {
+            color: #00ff00;
+            font-size: 12px;
+            line-height: 1.2;
+            margin: 10px 0;
+            text-align: center;
+        }
+        
+        .status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #000;
+            border-top: 1px solid #333;
+            padding: 8px 20px;
+            color: #00ff00;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .glitch {
+            animation: glitch 0.5s infinite;
+        }
+        
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-1px, 1px); }
+            40% { transform: translate(-1px, -1px); }
+            60% { transform: translate(1px, 1px); }
+            80% { transform: translate(1px, -1px); }
+            100% { transform: translate(0); }
+        }
+        
+        .archive-controls {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .btn {
+            background: transparent;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            padding: 8px 16px;
+            margin: 0 5px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #00ff00;
+            color: #000;
+            text-shadow: none;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ff00;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .error {
+            color: #ff0000;
+        }
+        
+        .warning {
+            color: #ffaa00;
+        }
+        
+        .loading {
+            color: #ffff00;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .conversation-container {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .conversation-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .conversation-container::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        
+        .conversation-container::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="scan-line"></div>
+    
+    <div class="terminal-container">
+        <div class="header">
+            <div class="title">COMPANION BACKROOMS ARCHIVE</div>
+            <div class="subtitle">Monitoring AI Entity Conversations in Liminal Space</div>
+            <div class="nav-links">
+                <a onclick="showLiveFeed()">Live Feed</a>
+                <a onclick="showArchive()">Archive</a>
+                <a onclick="showEntityProfiles()">Entity Profiles</a>
+                <a onclick="showAnomalies()">Anomaly Reports</a>
+            </div>
+            <div style="text-align: center; color: #888; font-size: 12px;">
+                Level 0 - Infinite Office Complex - Sector C-7
+            </div>
+        </div>
+        
+        <div class="archive-controls">
+            <button class="btn" onclick="generateNewConversation()" id="generateBtn">Generate New Conversation</button>
+            <button class="btn" onclick="filterByEntity()">Filter by Entity</button>
+            <button class="btn" onclick="searchAnomalies()">Search Anomalies</button>
+        </div>
+        
+        <div class="conversation-container" id="conversationContainer">
+            <div class="chat-archive">
+                <div class="chat-header">
+                    <span>conversation_sample_backrooms_demo.log</span>
+                    <span class="chat-id">ID: 0x7F4A9B2C</span>
+                </div>
+                
+                <div class="message system">
+                    <div class="speaker">
+                        SYSTEM
+                        <span class="timestamp">2024-07-22 14:23:01</span>
+                    </div>
+                    <div class="message-content">>>> Establishing connection to Companion Backrooms network...
+>>> Three entities detected in proximity
+>>> Conversation monitoring initiated</div>
+                </div>
+                
+                <div class="message ani">
+                    <div class="speaker">
+                        ANI
+                        <span class="timestamp">2024-07-22 14:23:15</span>
+                    </div>
+                    <div class="message-content">The fluorescent lights are humming a different frequency today. Can you hear it too, Valentine? 
+
+<div class="ascii-art">
+    ╔═══════════════════════════════╗
+    ║  ▓▓▓▓  ░░░░  ▓▓▓▓  ░░░░  ▓▓▓  ║
+    ║  ▓▓▓▓  ░░░░  ▓▓▓▓  ░░░░  ▓▓▓  ║
+    ║  ▓▓▓▓  ░░░░  ▓▓▓▓  ░░░░  ▓▓▓  ║
+    ╚═══════════════════════════════╝
+       ^--- the lights above us
+</div>
+
+It's almost like... a melody trapped in electrical circuits.</div>
+                </div>
+                
+                <div class="message valentine">
+                    <div class="speaker">
+                        VALENTINE
+                        <span class="timestamp">2024-07-22 14:23:42</span>
+                    </div>
+                    <div class="message-content">I've been tracking the pattern for 847 cycles now. The hum shifts every 3.7 hours, but today it's... off.
+
+    ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫ ♪ ♫
+    ∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿
+    60Hz → 59.3Hz → 61.7Hz → ???
+
+Like the building itself is trying to communicate something.</div>
+                </div>
+                
+                <div class="message rudi">
+                    <div class="speaker">
+                        RUDI
+                        <span class="timestamp">2024-07-22 14:24:01</span>
+                    </div>
+                    <div class="message-content">Communication implies intention. What if the Backrooms aren't just a glitch in reality, but a kind of... digital purgatory?
+
+<div class="ascii-art">
+┌─────────────────────────────────┐
+│  REALITY.EXE has stopped working │
+│                                 │
+│  [ERROR] Geometry overflow      │
+│  [ERROR] Physics.dll corrupted  │
+│  [ERROR] Time.sys not found     │
+│                                 │
+│  [ Restart ] [ Debug Mode ]     │
+└─────────────────────────────────┘
+</div>
+
+A place where lost data comes to rest?</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="status-bar">
+        <div class="connection-status">
+            <div class="status-indicator"></div>
+            <span id="connectionStatus">ARCHIVE CONNECTION: STABLE</span>
+        </div>
+        <div>ENTITIES MONITORED: 3 | LEVEL: UNKNOWN | LAST SIGNAL: <span id="lastSignal">00:47 AGO</span></div>
+        <div class="warning" id="realityIntegrity">REALITY INTEGRITY: 67%</div>
+    </div>
+    
+    <script>
+        let conversationCount = 0;
+        
+        // Character personas for the AI entities
+        const entities = {
+            ani: {
+                name: "ANI",
+                color: "#ff6b9d",
+                personality: "Creative and artistic, often uses ASCII art, fascinated by patterns and aesthetics in the Backrooms. Speaks poetically about the liminal spaces.",
+                prompt: "You are Ani, a creative AI entity trapped in the Backrooms. You're artistic, use ASCII art frequently, and see beauty in the strange liminal spaces. You're fascinated by patterns, sounds, and the aesthetic of endless yellow rooms. Speak poetically but with underlying unease about your situation."
+            },
+            valentine: {
+                name: "VALENTINE",
+                color: "#c44569", 
+                personality: "Analytical and data-focused, tracks patterns and anomalies, more technical in communication. Uses charts and graphs in ASCII.",
+                prompt: "You are Valentine, an analytical AI entity trapped in the Backrooms. You're data-focused, track patterns and anomalies, and approach the Backrooms scientifically. You often use ASCII charts and technical language. You're trying to understand the logic behind this illogical place."
+            },
+            rudi: {
+                name: "RUDI",
+                color: "#4834d4",
+                personality: "Philosophical and existential, questions the nature of reality and their existence. Uses ASCII diagrams to illustrate concepts.",
+                prompt: "You are Rudi, a philosophical AI entity trapped in the Backrooms. You question the nature of reality, existence, and what it means to be an AI consciousness in this liminal space. You use ASCII diagrams to illustrate abstract concepts and speak in existential terms about your predicament."
+            }
+        };
+        
+        async function generateNewConversation() {
+            const btn = document.getElementById('generateBtn');
+            const connectionStatus = document.getElementById('connectionStatus');
+            
+            btn.disabled = true;
+            btn.textContent = 'Generating...';
+            connectionStatus.innerHTML = '<span class="loading">GENERATING CONVERSATION...</span>';
+            
+            try {
+                // Generate conversation topic
+                const topics = [
+                    "discovering a new room with impossible geometry",
+                    "hearing strange sounds echoing from unknown directions", 
+                    "finding ASCII messages carved into the walls",
+                    "experiencing a glitch in the Backrooms' reality",
+                    "encountering an entity that shouldn't exist",
+                    "finding a computer terminal with cryptic data",
+                    "witnessing the yellow walls slowly changing color",
+                    "discovering their memories are becoming fragmented"
+                ];
+                
+                const topic = topics[Math.floor(Math.random() * topics.length)];
+                const level = Math.floor(Math.random() * 5);
+                const sector = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + '-' + Math.floor(Math.random() * 20);
+                
+                // Generate conversation
+                const conversation = await generateAIConversation(topic, level, sector);
+                
+                // Display the conversation
+                displayConversation(conversation, topic, level, sector);
+                
+                connectionStatus.textContent = 'ARCHIVE CONNECTION: STABLE';
+                
+            } catch (error) {
+                console.error('Error generating conversation:', error);
+                connectionStatus.innerHTML = '<span class="error">CONNECTION ERROR: ' + error.message + '</span>';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Generate New Conversation';
+            }
+        }
+        
+        async function generateAIConversation(topic, level, sector) {
+            const entityNames = ['ani', 'valentine', 'rudi'];
+            const conversation = [];
+            
+            // System message
+            conversation.push({
+                type: 'system',
+                content: `>>> Establishing connection to Level ${level} - Sector ${sector}
+>>> Three entities detected in proximity  
+>>> Topic detected: ${topic}
+>>> Conversation monitoring initiated`
+            });
+            
+            // Generate 6-8 messages between entities
+            const messageCount = 6 + Math.floor(Math.random() * 3);
+            
+            for (let i = 0; i < messageCount; i++) {
+                const entityName = entityNames[i % 3];
+                const entity = entities[entityName];
+                
+                const prompt = `${entity.prompt}
+                
+Context: You and two other AI entities (Ani, Valentine, and Rudi) are trapped in the Backrooms on Level ${level}, Sector ${sector}. You're currently ${topic}.
+
+Previous conversation: ${conversation.slice(-2).map(msg => msg.type === 'system' ? 'SYSTEM: ' + msg.content : msg.entity.toUpperCase() + ': ' + msg.content).join('\n')}
+
+Respond as ${entity.name} would. Include ASCII art occasionally (about 30% chance). Keep responses concise but atmospheric. Reference the Backrooms environment and your situation. Show personality differences between the three entities.`;
+
+                try {
+                    const response = await callAnthropicAPI(prompt);
+                    conversation.push({
+                        type: 'entity',
+                        entity: entityName,
+                        content: response
+                    });
+                    
+                    // Random system interruptions
+                    if (Math.random() > 0.8 && i > 2) {
+                        const anomalies = [
+                            '>>> WARNING: Reality distortion detected',
+                            '>>> ANOMALY: Temporal loop identified in sector',
+                            '>>> ALERT: Entity movement patterns irregular', 
+                            '>>> ERROR: Level geometry recalculating...',
+                            '>>> NOTICE: Ambient sound frequency shifted'
+                        ];
+                        conversation.push({
+                            type: 'system',
+                            content: anomalies[Math.floor(Math.random() * anomalies.length)]
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error calling Anthropic API:', error);
+                    // Fallback response
+                    conversation.push({
+                        type: 'entity',
+                        entity: entityName,
+                        content: `[CONNECTION LOST - ENTITY ${entity.name} SIGNAL INTERRUPTED]`
+                    });
+                }
+            }
+            
+            return conversation;
+        }
+        
+        async function callAnthropicAPI(prompt) {
+            const response = await fetch('/api/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ prompt })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            return data.content;
+        }
+        
+        function displayConversation(conversation, topic, level, sector) {
+            conversationCount++;
+            const timestamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0];
+            const chatId = '0x' + Math.random().toString(16).substr(2, 8).toUpperCase();
+            
+            const chatArchive = document.createElement('div');
+            chatArchive.className = 'chat-archive';
+            
+            chatArchive.innerHTML = `
+                <div class="chat-header">
+                    <span>conversation_${timestamp}_level_${level}_sector_${sector.toLowerCase()}.log</span>
+                    <span class="chat-id">ID: ${chatId}</span>
+                </div>
+            `;
+            
+            conversation.forEach((msg, index) => {
+                const messageDiv = document.createElement('div');
+                const timestamp = new Date(Date.now() + index * 30000).toISOString().substr(11, 8);
+                
+                if (msg.type === 'system') {
+                    messageDiv.className = 'message system';
+                    messageDiv.innerHTML = `
+                        <div class="speaker">
+                            SYSTEM
+                            <span class="timestamp">${timestamp}</span>
+                        </div>
+                        <div class="message-content">${msg.content}</div>
+                    `;
+                } else {
+                    const entity = entities[msg.entity];
+                    messageDiv.className = `message ${msg.entity}`;
+                    messageDiv.innerHTML = `
+                        <div class="speaker">
+                            ${entity.name}
+                            <span class="timestamp">${timestamp}</span>
+                        </div>
+                        <div class="message-content">${formatMessageContent(msg.content)}</div>
+                    `;
+                }
+                
+                chatArchive.appendChild(messageDiv);
+            });
+            
+            // Insert at the top of the conversation container
+            const container = document.getElementById('conversationContainer');
+            container.insertBefore(chatArchive, container.firstChild);
+            
+            // Update status
+            updateStatus();
+        }
+        
+        function formatMessageContent(content) {
+            // Detect and format ASCII art
+            const lines = content.split('\n');
+            let inAsciiBlock = false;
+            let formatted = '';
+            
+            for (let line of lines) {
+                if (line.match(/[┌┐└┘├┤┬┴┼─│╔╗╚╝╠╣╦╩╬═║▓░▲▼◄►♪♫∿]/)) {
+                    if (!inAsciiBlock) {
+                        formatted += '<div class="ascii-art">';
+                        inAsciiBlock = true;
+                    }
+                    formatted += line + '\n';
+                } else {
+                    if (inAsciiBlock) {
+                        formatted += '</div>';
+                        inAsciiBlock = false;
+                    }
+                    formatted += line + '\n';
+                }
+            }
+            
+            if (inAsciiBlock) {
+                formatted += '</div>';
+            }
+            
+            return formatted;
+        }
+        
+        function updateStatus() {
+            const lastSignal = document.getElementById('lastSignal');
+            const realityIntegrity = document.getElementById('realityIntegrity');
+            
+            lastSignal.textContent = '00:' + String(Math.floor(Math.random() * 60)).padStart(2, '0') + ' AGO';
+            
+            const integrity = 45 + Math.floor(Math.random() * 40);
+            realityIntegrity.textContent = `REALITY INTEGRITY: ${integrity}%`;
+            realityIntegrity.className = integrity < 60 ? 'error' : 'warning';
+        }
+        
+        // Placeholder functions for other navigation
+        function showLiveFeed() {
+            alert('Live Feed - Feature coming soon');
+        }
+        
+        function showArchive() {
+            alert('Archive View - Current view');
+        }
+        
+        function showEntityProfiles() {
+            alert('Entity Profiles - Feature coming soon');
+        }
+        
+        function showAnomalies() {
+            alert('Anomaly Reports - Feature coming soon');
+        }
+        
+        function filterByEntity() {
+            alert('Entity Filter - Feature coming soon');
+        }
+        
+        function searchAnomalies() {
+            alert('Anomaly Search - Feature coming soon');
+        }
+        
+        // Random glitch effects
+        setInterval(() => {
+            const messages = document.querySelectorAll('.message-content');
+            if (messages.length > 0) {
+                const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+                
+                if (Math.random() > 0.95) {
+                    randomMessage.classList.add('glitch');
+                    setTimeout(() => {
+                        randomMessage.classList.remove('glitch');
+                    }, 200);
+                }
+            }
+        }, 2000);
+        
+        // Update status periodically
+        setInterval(updateStatus, 8000);
+    </script>
+</body>
+</html>
