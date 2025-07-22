@@ -746,23 +746,75 @@
         }
         
         function startMessageGeneration() {
-            // Poll for message generation every 10 seconds
+            // Test the debug API first
+            setTimeout(async () => {
+                try {
+                    console.log('Testing debug API...');
+                    const debugResponse = await fetch('/api/test-debug');
+                    const debugData = await debugResponse.json();
+                    console.log('Debug API results:', debugData);
+                    
+                    // If debug API works, try simple generate
+                    if (debugResponse.ok) {
+                        console.log('Testing simple generate API...');
+                        const generateResponse = await fetch('/api/simple-generate', { method: 'POST' });
+                        const generateData = await generateResponse.json();
+                        console.log('Simple generate results:', generateData);
+                        
+                        if (generateResponse.ok && generateData.message) {
+                            // Add the test message to UI
+                            addMessageToUI({
+                                id: 'test_' + Date.now(),
+                                speaker: generateData.speaker,
+                                content: generateData.message,
+                                timestamp: generateData.timestamp,
+                                type: 'entity'
+                            });
+                            
+                            // Start the real generation loop if test successful
+                            startRealMessageGeneration();
+                        } else {
+                            console.error('Simple generate failed:', generateData);
+                            showConnectionError();
+                        }
+                    } else {
+                        console.error('Debug API failed:', debugData);
+                        showConnectionError();
+                    }
+                } catch (error) {
+                    console.error('Error testing APIs:', error);
+                    showConnectionError();
+                }
+            }, 3000);
+        }
+        
+        function startRealMessageGeneration() {
+            console.log('Starting real message generation...');
+            
+            // Poll for message generation every 30 seconds
             messageGenerationInterval = setInterval(async () => {
                 try {
                     await fetch('/api/generate-message', { method: 'POST' });
                 } catch (error) {
                     console.error('Error triggering message generation:', error);
+                    // Fallback to simple generate if main API fails
+                    try {
+                        const response = await fetch('/api/simple-generate', { method: 'POST' });
+                        const data = await response.json();
+                        if (response.ok && data.message) {
+                            addMessageToUI({
+                                id: 'fallback_' + Date.now(),
+                                speaker: data.speaker,
+                                content: data.message,
+                                timestamp: data.timestamp,
+                                type: 'entity'
+                            });
+                        }
+                    } catch (fallbackError) {
+                        console.error('Fallback generate also failed:', fallbackError);
+                    }
                 }
-            }, 10000);
-            
-            // Also trigger immediately
-            setTimeout(async () => {
-                try {
-                    await fetch('/api/generate-message', { method: 'POST' });
-                } catch (error) {
-                    console.error('Error triggering initial message:', error);
-                }
-            }, 3000);
+            }, 30000);
         }
         
         function scrollToBottom() {
