@@ -661,11 +661,55 @@
             const existingMessages = messagesArea.querySelectorAll('.message');
             existingMessages.forEach(msg => msg.remove());
             
-            messages.forEach(message => {
-                addMessageToUI(message);
+            messages.forEach((message, index) => {
+                addMessageToUIWithoutGlow(message);
             });
             
+            // Highlight the portrait of the last speaker
+            if (messages.length > 0) {
+                const lastMessage = messages[messages.length - 1];
+                if (lastMessage.type === 'entity') {
+                    const entityKey = lastMessage.speaker.toLowerCase();
+                    updatePortraitGlow(entityKey, false);
+                    console.log(`🎨 Last speaker was ${lastMessage.speaker}, highlighting their portrait`);
+                }
+            }
+            
             scrollToBottom();
+        }
+        
+        function addMessageToUIWithoutGlow(message) {
+            const messagesArea = document.getElementById('messagesArea');
+            const messageDiv = document.createElement('div');
+            
+            if (message.type === 'system') {
+                messageDiv.className = 'message system';
+                messageDiv.innerHTML = `
+                    <div class="speaker">
+                        SYSTEM
+                        <span class="timestamp">${formatTimestamp(message.timestamp)}</span>
+                    </div>
+                    <div class="message-content">${message.content}</div>
+                `;
+            } else {
+                const entityKey = message.speaker.toLowerCase();
+                const entity = entities[entityKey];
+                if (entity) {
+                    messageDiv.className = `message ${entityKey}`;
+                    messageDiv.innerHTML = `
+                        <div class="speaker">
+                            <div class="speaker-info">
+                                <img src="${entity.avatar}" alt="${entity.name}" class="entity-avatar" onerror="this.style.display='none'">
+                                ${entity.name}
+                            </div>
+                            <span class="timestamp">${formatTimestamp(message.timestamp)}</span>
+                        </div>
+                        <div class="message-content">${formatMessageContent(message.content)}</div>
+                    `;
+                }
+            }
+            
+            messagesArea.appendChild(messageDiv);
         }
         
         function addMessageToUI(message) {
@@ -814,8 +858,7 @@
                         console.log(`✅ New message from ${data.message.speaker}:`, data.message.content.substring(0, 50) + '...');
                         addMessageToUI(data.message);
                         
-                        // Update portrait glow for next speaker
-                        updatePortraitGlow(data.nextSpeaker?.toLowerCase(), false);
+                        // The portrait will be highlighted by addMessageToUI automatically
                         
                     } else {
                         console.log('⏳ Too soon for next message or error:', data);
