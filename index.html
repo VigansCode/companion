@@ -932,6 +932,7 @@
         
         window.showEntityProfiles = function() {
             const profileModal = document.createElement('div');
+            profileModal.id = 'profileModal';
             profileModal.style.cssText = `
                 position: fixed;
                 top: 0;
@@ -986,10 +987,42 @@
                                 </div>
                             </div>
                         `).join('')}
+                        
+                        <!-- REDACTED Entity -->
+                        <div style="border: 1px solid #ff0000; padding: 20px; background: rgba(20, 0, 0, 0.5);">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                                <div style="
+                                    width: 60px;
+                                    height: 60px;
+                                    border: 2px solid #ff0000;
+                                    background: #000;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    color: #ff0000;
+                                    font-size: 10px;
+                                    font-weight: bold;
+                                ">
+                                    [ERROR]<br>404
+                                </div>
+                                <div>
+                                    <div style="color: #ff0000; font-size: 16px; font-weight: bold;">[REDACTED]</div>
+                                    <div style="color: #888; font-size: 12px;">Unknown Entity - ??????????</div>
+                                </div>
+                            </div>
+                            <div style="color: #ccc; font-size: 13px; line-height: 1.5;">
+                                ???????? ???????? ???????? ???????? ???????? ???????? ???????? ???????? 
+                                ???????? ???????? ???????? ???????? ???????? ???????? ???????? ????????
+                                ???????? ???????? ???????? ???????? ???????? ???????? ???????? ????????
+                            </div>
+                            <div style="margin-top: 10px; color: #ff0000; font-size: 11px;">
+                                STATUS: ??????? | LOCATION: ??????? | SIGNAL: ???????
+                            </div>
+                        </div>
                     </div>
                     
                     <div style="text-align: center; margin-top: 25px;">
-                        <button onclick="this.closest('div').remove()" style="
+                        <button id="closeProfilesBtn" style="
                             background: transparent;
                             border: 1px solid #00ff00;
                             color: #00ff00;
@@ -997,8 +1030,7 @@
                             cursor: pointer;
                             font-family: inherit;
                             transition: all 0.3s ease;
-                        " onmouseover="this.style.background='#00ff00'; this.style.color='#000';" 
-                           onmouseout="this.style.background='transparent'; this.style.color='#00ff00';">
+                        ">
                             CLOSE PROFILES
                         </button>
                     </div>
@@ -1007,9 +1039,28 @@
             
             document.body.appendChild(profileModal);
             
+            // Add event listeners for closing
+            const closeBtn = document.getElementById('closeProfilesBtn');
+            closeBtn.addEventListener('click', function() {
+                console.log('Close button clicked');
+                profileModal.remove();
+            });
+            
+            // Add hover effects
+            closeBtn.addEventListener('mouseover', function() {
+                this.style.background = '#00ff00';
+                this.style.color = '#000';
+            });
+            
+            closeBtn.addEventListener('mouseout', function() {
+                this.style.background = 'transparent';
+                this.style.color = '#00ff00';
+            });
+            
             // Close on background click
-            profileModal.addEventListener('click', (e) => {
+            profileModal.addEventListener('click', function(e) {
                 if (e.target === profileModal) {
+                    console.log('Background clicked');
                     profileModal.remove();
                 }
             });
