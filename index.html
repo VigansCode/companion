@@ -761,75 +761,88 @@
         }
         
         function startMessageGeneration() {
-            // Test the debug API first
+            // Test Firebase first
             setTimeout(async () => {
                 try {
-                    console.log('Testing debug API...');
-                    const debugResponse = await fetch('/api/test-debug');
-                    const debugData = await debugResponse.json();
-                    console.log('Debug API results:', debugData);
+                    console.log('🧪 Testing Firebase vs API...');
                     
-                    // If debug API works, try simple generate
-                    if (debugResponse.ok) {
-                        console.log('Testing simple generate API...');
-                        const generateResponse = await fetch('/api/simple-generate', { method: 'POST' });
-                        const generateData = await generateResponse.json();
-                        console.log('Simple generate results:', generateData);
+                    // Try to get conversation state
+                    const response = await fetch('/api/rotating-generate');
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('📊 Current conversation state:', data);
                         
-                        if (generateResponse.ok && generateData.message) {
-                            // Add the test message to UI
-                            addMessageToUI({
-                                id: 'test_' + Date.now(),
-                                speaker: generateData.speaker,
-                                content: generateData.message,
-                                timestamp: generateData.timestamp,
-                                type: 'entity'
-                            });
-                            
-                            // Start the real generation loop if test successful
-                            startRealMessageGeneration();
+                        if (data.messages && data.messages.length > 0) {
+                            // Load existing messages
+                            renderMessages(data.messages);
                         } else {
-                            console.error('Simple generate failed:', generateData);
-                            showConnectionError();
+                            // Generate first message
+                            console.log('🎬 Generating first message...');
+                            const generateResponse = await fetch('/api/rotating-generate', { method: 'POST' });
+                            const generateData = await generateResponse.json();
+                            
+                            if (generateResponse.ok && generateData.message) {
+                                console.log('✅ First message generated:', generateData.message);
+                                addMessageToUI(generateData.message);
+                            }
                         }
+                        
+                        // Start continuous generation
+                        startContinuousGeneration();
+                        
                     } else {
-                        console.error('Debug API failed:', debugData);
+                        console.error('❌ API test failed');
                         showConnectionError();
                     }
                 } catch (error) {
-                    console.error('Error testing APIs:', error);
+                    console.error('❌ Error testing APIs:', error);
                     showConnectionError();
                 }
             }, 3000);
         }
         
-        function startRealMessageGeneration() {
-            console.log('Starting real message generation...');
+        function startContinuousGeneration() {
+            console.log('🔄 Starting continuous message generation...');
             
-            // Poll for message generation every 30 seconds
             messageGenerationInterval = setInterval(async () => {
                 try {
-                    await fetch('/api/generate-message', { method: 'POST' });
-                } catch (error) {
-                    console.error('Error triggering message generation:', error);
-                    // Fallback to simple generate if main API fails
-                    try {
-                        const response = await fetch('/api/simple-generate', { method: 'POST' });
-                        const data = await response.json();
-                        if (response.ok && data.message) {
-                            addMessageToUI({
-                                id: 'fallback_' + Date.now(),
-                                speaker: data.speaker,
-                                content: data.message,
-                                timestamp: data.timestamp,
-                                type: 'entity'
-                            });
-                        }
-                    } catch (fallbackError) {
-                        console.error('Fallback generate also failed:', fallbackError);
+                    console.log('🎭 Generating next message...');
+                    const response = await fetch('/api/rotating-generate', { method: 'POST' });
+                    const data = await response.json();
+                    
+                    if (response.ok && data.message) {
+                        console.log(`✅ New message from ${data.message.speaker}:`, data.message.content.substring(0, 50) + '...');
+                        addMessageToUI(data.message);
+                        
+                        // Update portrait glow for next speaker
+                        updatePortraitGlow(data.nextSpeaker?.toLowerCase(), false);
+                        
+                    } else {
+                        console.log('⏳ Too soon for next message or error:', data);
                     }
+                } catch (error) {
+                    console.error('❌ Error generating message:', error);
                 }
-            }, 30000);
+            }, 15000); // Try every 15 seconds
+            
+            // Also update conversation state periodically
+            setInterval(async () => {
+                try {
+                    const response = await fetch('/api/rotating-generate');
+                    const data = await response.json();
+                    
+                    if (response.ok && data.messages) {
+                        // Only update if we have new messages
+                        const currentMessageCount = document.querySelectorAll('.message').length;
+                        if (data.messages.length > currentMessageCount) {
+                            console.log('📥 New messages detected, updating UI...');
+                            renderMessages(data.messages);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error syncing conversation:', error);
+                }
+            }, 5000); // Check every 5 seconds
         }
         
         function scrollToBottom() {
