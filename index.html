@@ -80,7 +80,7 @@
         
         .portrait-stats {
             position: absolute;
-            top: -120px;
+            top: 70px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(0, 0, 0, 0.95);
@@ -97,20 +97,20 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
         }
         
-        .portrait-stats::after {
+        .portrait-stats::before {
             content: '';
             position: absolute;
-            top: 100%;
+            bottom: 100%;
             left: 50%;
             transform: translateX(-50%);
             border: 6px solid transparent;
-            border-top-color: #555;
+            border-bottom-color: #555;
         }
         
         .portrait-container:hover .portrait-stats {
             opacity: 1;
             visibility: visible;
-            top: -130px;
+            top: 80px;
         }
         
         .stat-row {
@@ -652,6 +652,13 @@
         let conversationData = null;
         let isInitialized = false;
         
+        // Entity statistics tracking
+        let entityStats = {
+            ani: { messageCount: 0, asciiCount: 0, lastActive: null },
+            valentine: { messageCount: 0, chartCount: 0, lastActive: null },
+            rudi: { messageCount: 0, diagramCount: 0, lastActive: null }
+        };
+        
         // Character data
         const entities = {
             ani: {
@@ -809,8 +816,23 @@
             const existingMessages = messagesArea.querySelectorAll('.message');
             existingMessages.forEach(msg => msg.remove());
             
+            // Reset stats when loading conversation history
+            entityStats = {
+                ani: { messageCount: 0, asciiCount: 0, lastActive: null },
+                valentine: { messageCount: 0, chartCount: 0, lastActive: null },
+                rudi: { messageCount: 0, diagramCount: 0, lastActive: null }
+            };
+            
             messages.forEach((message, index) => {
                 addMessageToUIWithoutGlow(message);
+                
+                // Update stats for historical messages
+                if (message.type === 'entity') {
+                    const entityKey = message.speaker.toLowerCase();
+                    if (entityStats[entityKey]) {
+                        updateEntityStats(entityKey, message);
+                    }
+                }
             });
             
             // Highlight the portrait of the last speaker
