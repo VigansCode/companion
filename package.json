@@ -1,18 +1,8 @@
 {
   "name": "companion-backrooms",
   "version": "1.0.0",
-  "description": "AI entities trapped in the Backrooms - infinite conversation",
-  "main": "index.html",
-  "scripts": {
-    "dev": "vercel dev",
-    "build": "echo 'No build needed'",
-    "start": "vercel dev"
-  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.1",
     "firebase-admin": "^12.0.0"
-  },
-  "engines": {
-    "node": ">=18.0.0"
   }
 }
